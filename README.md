@@ -1,35 +1,32 @@
-# Solar Power Prediction using Neural Network
+# Solar Power Prediction using Neural Network ⚡
 
-This project uses a **Feedforward Neural Network** built with PyTorch to predict solar power generation based on weather conditions.
+This project uses a **Feedforward Neural Network** built with **PyTorch** to predict solar power generation based on weather conditions.
 
-##  Objective
-Predict solar power output (kW) using:
+## Objective
+Predict solar power output (kW) using four weather parameters:
 - Temperature (°C)
 - Humidity (%)
 - Solar Irradiance (W/m²)
 - Wind Speed (km/h)
 
-##  Technologies Used
+## Technologies Used
 - Python
 - PyTorch
 - NumPy, Pandas, Matplotlib
 
-##  Files
-- `solar_power_prediction.py` → Main code with detailed comments
-
-##  How to Run
+## How to Run
 ```bash
 pip install torch numpy pandas matplotlib
 python solar_power_prediction.py
 Model Architecture
 
-4 Input Features
-4 Hidden Layers (64 → 32 → 16 → 1)
-ReLU activation + Dropout
-MSE Loss + Adam Optimizer
+Input: 4 features
+Hidden Layers: 64 → 32 → 16 neurons
+Output: 1 (Predicted Solar Power)
+ReLU Activation + Dropout (0.15)
 
-Future Plans
+Future Improvements
 
-Add real solar dataset
+Use real solar dataset from NREL
 Implement LSTM for time series forecasting
-Create a web app for predictions
+Build a web app
