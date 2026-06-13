@@ -1,6 +1,6 @@
 """
 Solar Power Prediction using Neural Network
-Author: Your Name
+Author: Anushka.Kharatmol
 Date: June 2026
 """
 
