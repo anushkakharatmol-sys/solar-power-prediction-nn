@@ -1,7 +1,7 @@
 """
 Solar Power Prediction using Neural Network
-Author: Anushka.Kharatmol
-Date: June 2026
+Author: Anushka Kharatmol
+Goal: Predict solar power using weather data
 """
 
 import torch
@@ -10,26 +10,22 @@ import torch.optim as optim
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
 
 # ====================== 1. DATA GENERATION ======================
 np.random.seed(42)
 
-n_samples = 1500  # Increased data size
+n_samples = 1500
 
-# Generate realistic weather features
 temperature = np.random.uniform(15, 45, n_samples)
 humidity = np.random.uniform(10, 90, n_samples)
 irradiance = np.random.uniform(100, 1100, n_samples)
 wind_speed = np.random.uniform(0, 15, n_samples)
 
-# Realistic Solar Power calculation
 solar_power = (irradiance * 0.0078 * 
-              (1 - 0.005 * (temperature - 25)) *      # Temperature penalty
-              (1 - 0.003 * humidity) *                # Humidity penalty
+              (1 - 0.005 * (temperature - 25)) * 
+              (1 - 0.003 * humidity) * 
               (1 + 0.012 * wind_speed)) + np.random.normal(0, 6, n_samples)
 
-# Create DataFrame
 df = pd.DataFrame({
     'Temperature': temperature,
     'Humidity': humidity,
@@ -41,31 +37,21 @@ df = pd.DataFrame({
 print("✅ Dataset Created!")
 print(df.head())
 
-# ====================== 2. DATA PREPROCESSING ======================
+# ====================== 2. PREPARE DATA ======================
 X = df.drop('Solar_Power', axis=1).values
 y = df['Solar_Power'].values.reshape(-1, 1)
 
-# Feature Scaling (Very Important for Neural Networks)
-scaler_X = StandardScaler()
-scaler_y = StandardScaler()
+X_tensor = torch.FloatTensor(X)
+y_tensor = torch.FloatTensor(y)
 
-X_scaled = scaler_X.fit_transform(X)
-y_scaled = scaler_y.fit_transform(y)
-
-X_tensor = torch.FloatTensor(X_scaled)
-y_tensor = torch.FloatTensor(y_scaled)
-
-print("✅ Data Scaled and Ready for Training!")
-
-# ====================== 3. NEURAL NETWORK MODEL ======================
-class SolarPowerPredictor(nn.Module):
+# ====================== 3. NEURAL NETWORK ======================
+class SolarPredictor(nn.Module):
     def __init__(self):
         super().__init__()
         self.fc1 = nn.Linear(4, 64)
         self.fc2 = nn.Linear(64, 32)
         self.fc3 = nn.Linear(32, 16)
         self.fc4 = nn.Linear(16, 1)
-        
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(0.2)
     
@@ -77,25 +63,21 @@ class SolarPowerPredictor(nn.Module):
         x = self.fc4(x)
         return x
 
-model = SolarPowerPredictor()
-print("✅ Neural Network Model Created!")
+model = SolarPredictor()
+print("✅ Model Created!")
 
 # ====================== 4. LOSS & OPTIMIZER ======================
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
 # ====================== 5. TRAINING ======================
-epochs = 1200
+epochs = 1000
 losses = []
 
-print("🚀 Training Started...\n")
-
 for epoch in range(epochs):
-    # Forward Pass
     outputs = model(X_tensor)
     loss = criterion(outputs, y_tensor)
     
-    # Backpropagation
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
@@ -107,29 +89,27 @@ for epoch in range(epochs):
 
 print("\n✅ Training Completed!")
 
-# Plot Training Loss
-plt.figure(figsize=(10, 5))
+# Plot Loss
 plt.plot(losses)
 plt.title('Training Loss Over Time')
 plt.xlabel('Epoch')
-plt.ylabel('MSE Loss')
+plt.ylabel('Loss')
 plt.grid(True)
 plt.show()
 
 # ====================== 6. TESTING ======================
 model.eval()
 
-test_cases = torch.FloatTensor([
-    [32, 35, 980, 9],    # Good sunny day
-    [24, 78, 450, 11],   # Cloudy + Humid
-    [40, 22, 1080, 4]    # Hot & Clear
+test_input = torch.FloatTensor([
+    [32, 35, 980, 9],
+    [25, 78, 450, 11],
+    [40, 22, 1080, 4]
 ])
 
 with torch.no_grad():
-    predictions = model(test_cases)
+    predictions = model(test_input)
 
 print("\n=== TEST PREDICTIONS ===")
-conditions = ["Good Sunny Day", "Cloudy Humid Day", "Hot Clear Day"]
-
-for i in range(3):
-    print(f"{conditions[i]} → Predicted Solar Power: {predictions[i].item():.2f} kW")
+print("Good Sunny Day    →", predictions[0].item())
+print("Cloudy Humid Day  →", predictions[1].item())
+print("Hot Clear Day     →", predictions[2].item())
