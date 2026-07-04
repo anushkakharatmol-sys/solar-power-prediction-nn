@@ -43,10 +43,8 @@ To accurately predict solar power output (in kW) using the following weather fea
 pip install -r requirements.txt
 python solar_power_prediction.py
 
-
-
 Engineering Application
-This project demonstrates the practical application of Artificial Neural Networks in Renewable Energy systems and Smart Grids.
+This project demonstrates the practical application of Artificial Neural Networks in Renewable Energy systems and Smart Grids. It shows how data-driven models can be used for solar power forecasting.
 Future Work
 
 Integration with real-world solar datasets
