@@ -1,8 +1,7 @@
 """
 Solar Power Prediction using Neural Network
 Author: Anushka Kharatmol
-Project: 2
-Goal: Predict solar power generation using weather data
+Project for Renewable Energy Applications
 """
 
 import torch
@@ -11,27 +10,26 @@ import torch.optim as optim
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_absolute_error, r2_score
 
 print("=== Solar Power Prediction using Neural Network ===\n")
 
 # ====================== 1. DATA GENERATION ======================
-np.random.seed(42)                    # For reproducibility
+np.random.seed(42)
+n_samples = 2000
 
-n_samples = 1500
+temperature = np.random.uniform(15, 45, n_samples)
+humidity = np.random.uniform(10, 90, n_samples)
+irradiance = np.random.uniform(100, 1100, n_samples)
+wind_speed = np.random.uniform(0, 15, n_samples)
 
-# Generate weather features
-temperature = np.random.uniform(15, 45, n_samples)      # Temperature in °C
-humidity = np.random.uniform(10, 90, n_samples)         # Humidity in %
-irradiance = np.random.uniform(100, 1100, n_samples)    # Solar Irradiance (W/m²)
-wind_speed = np.random.uniform(0, 15, n_samples)        # Wind Speed (km/h)
+# More realistic solar power formula
+solar_power = (irradiance * 0.008 * 
+              (1 - 0.005 * (temperature - 25)) * 
+              (1 - 0.0035 * humidity) * 
+              (1 + 0.015 * wind_speed)) + np.random.normal(0, 7, n_samples)
 
-# Realistic Solar Power calculation
-solar_power = (irradiance * 0.0078 * 
-              (1 - 0.005 * (temperature - 25)) *        # Temperature effect
-              (1 - 0.003 * humidity) *                  # Humidity effect
-              (1 + 0.012 * wind_speed)) + np.random.normal(0, 6, n_samples)
-
-# Create DataFrame
 df = pd.DataFrame({
     'Temperature': temperature,
     'Humidity': humidity,
@@ -40,28 +38,32 @@ df = pd.DataFrame({
     'Solar_Power': solar_power
 })
 
-print("✅ Dataset Created!")
+print("Dataset Shape:", df.shape)
 print(df.head())
 
-# ====================== 2. PREPARE DATA ======================
-X = df.drop('Solar_Power', axis=1).values      # Input features (4 columns)
-y = df['Solar_Power'].values.reshape(-1, 1)    # Target variable
+# ====================== 2. DATA PREPROCESSING ======================
+X = df.drop('Solar_Power', axis=1).values
+y = df['Solar_Power'].values.reshape(-1, 1)
 
-# Convert to PyTorch tensors
-X_tensor = torch.FloatTensor(X)
-y_tensor = torch.FloatTensor(y)
+scaler_X = StandardScaler()
+scaler_y = StandardScaler()
 
-# ====================== 3. NEURAL NETWORK MODEL ======================
+X_scaled = scaler_X.fit_transform(X)
+y_scaled = scaler_y.fit_transform(y)
+
+X_tensor = torch.FloatTensor(X_scaled)
+y_tensor = torch.FloatTensor(y_scaled)
+
+# ====================== 3. NEURAL NETWORK ======================
 class SolarPredictor(nn.Module):
     def __init__(self):
         super().__init__()
-        self.fc1 = nn.Linear(4, 64)     # Input layer: 4 features → 64 neurons
-        self.fc2 = nn.Linear(64, 32)    # Hidden layer 1
-        self.fc3 = nn.Linear(32, 16)    # Hidden layer 2
-        self.fc4 = nn.Linear(16, 1)     # Output layer: 1 value (Power)
-        
-        self.relu = nn.ReLU()           # Activation function
-        self.dropout = nn.Dropout(0.2)  # Prevent overfitting
+        self.fc1 = nn.Linear(4, 128)
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, 32)
+        self.fc4 = nn.Linear(32, 1)
+        self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(0.2)
     
     def forward(self, x):
         x = self.relu(self.fc1(x))
@@ -72,24 +74,17 @@ class SolarPredictor(nn.Module):
         return x
 
 model = SolarPredictor()
-print("✅ Neural Network Model Created!")
+criterion = nn.MSELoss()
+optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-# ====================== 4. LOSS FUNCTION & OPTIMIZER ======================
-criterion = nn.MSELoss()                                 # Mean Squared Error
-optimizer = optim.Adam(model.parameters(), lr=0.001)    # Adam Optimizer
-
-# ====================== 5. TRAINING ======================
-epochs = 1000
+# ====================== 4. TRAINING ======================
+epochs = 800
 losses = []
 
-print("🚀 Training Started...\n")
-
 for epoch in range(epochs):
-    # Forward Pass
     outputs = model(X_tensor)
     loss = criterion(outputs, y_tensor)
     
-    # Backpropagation + Gradient Descent
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
@@ -99,30 +94,39 @@ for epoch in range(epochs):
     if (epoch + 1) % 200 == 0:
         print(f"Epoch [{epoch+1}/{epochs}], Loss: {loss.item():.4f}")
 
-print("\n✅ Training Completed!")
+print("\nTraining Completed!")
 
-# Plot Training Loss
-plt.figure(figsize=(10, 5))
+# ====================== 5. EVALUATION ======================
+model.eval()
+with torch.no_grad():
+    predictions_scaled = model(X_tensor)
+    predictions = scaler_y.inverse_transform(predictions_scaled.numpy())
+    actual = scaler_y.inverse_transform(y_tensor.numpy())
+
+mae = mean_absolute_error(actual, predictions)
+r2 = r2_score(actual, predictions)
+
+print(f"\nModel Performance:")
+print(f"Mean Absolute Error: {mae:.2f} kW")
+print(f"R² Score: {r2:.4f} (Higher is better)")
+
+# ====================== 6. VISUALIZATION ======================
+plt.figure(figsize=(12, 5))
+
+plt.subplot(1, 2, 1)
 plt.plot(losses)
 plt.title('Training Loss Over Time')
 plt.xlabel('Epoch')
-plt.ylabel('Loss (MSE)')
+plt.ylabel('MSE Loss')
 plt.grid(True)
+
+plt.subplot(1, 2, 2)
+plt.scatter(actual[:200], predictions[:200], alpha=0.6)
+plt.plot([actual.min(), actual.max()], [actual.min(), actual.max()], 'r--')
+plt.xlabel('Actual Solar Power (kW)')
+plt.ylabel('Predicted Solar Power (kW)')
+plt.title('Actual vs Predicted')
+plt.grid(True)
+
+plt.tight_layout()
 plt.show()
-
-# ====================== 6. TESTING ======================
-model.eval()   # Evaluation mode
-
-test_input = torch.FloatTensor([
-    [32, 35, 980, 9],     # Good Sunny Day
-    [25, 78, 450, 11],    # Cloudy + Humid
-    [40, 22, 1080, 4]     # Hot Clear Day
-])
-
-with torch.no_grad():
-    predictions = model(test_input)
-
-print("\n=== TEST PREDICTIONS ===")
-print("Good Sunny Day   → Predicted Power:", round(predictions[0].item(), 2), "kW")
-print("Cloudy Humid Day → Predicted Power:", round(predictions[1].item(), 2), "kW")
-print("Hot Clear Day    → Predicted Power:", round(predictions[2].item(), 2), "kW")
