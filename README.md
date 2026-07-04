@@ -1,52 +1,57 @@
-# Solar Power Prediction using Neural Network
+# Solar Power Prediction — Real Data Edition
 
-This project develops a Feedforward Neural Network using PyTorch to predict solar power generation based on meteorological parameters.
+Rebuilt version of the original repo, fixing the two biggest issues: fake
+random data, and no train/test split.
 
-## Objective
-To accurately predict solar power output (in kW) using the following weather features:
-- Temperature (°C)
-- Humidity (%)
-- Solar Irradiance (W/m²)
-- Wind Speed (km/h)
+## What's different from the original
 
-## Technologies Used
-- Python
-- PyTorch
-- NumPy
-- Pandas
-- Matplotlib
-- Scikit-learn
+| | Original | This version |
+|---|---|---|
+| Data | `np.random.uniform` + a made-up formula | Real NREL TMY3 weather-station data |
+| Target | Hand-written formula | pvlib's PVWatts model (industry-standard) |
+| Split | None (trained & tested on same rows) | Chronological 70/15/15 train/val/test |
+| Scaling | Fit on all data | Fit on train only (no leakage) |
+| Training | Fixed epoch count | Early stopping + LR scheduling |
+| Results | Static plots | Interactive dashboard (`dashboard.html`) |
 
-## Model Architecture
-- Input Layer: 4 features
-- Hidden Layers: 128 → 64 → 32 neurons
-- Output Layer: 1 (Predicted Solar Power)
-- Activation Function: ReLU
-- Regularization: Dropout (0.2)
-- Optimizer: Adam
-- Loss Function: Mean Squared Error (MSE)
+## Data source
 
-## Results
+[pvlib](https://pvlib-python.readthedocs.io) ships a real NREL **TMY3**
+(Typical Meteorological Year) file for Sand Point, Alaska — genuine hourly
+measurements of solar irradiance (GHI/DNI/DHI), temperature, wind, humidity,
+and cloud cover.
 
-**Training Loss Over Time**
-![Training Loss](training_loss.png)
+The target (AC power output of a modeled 5kW rooftop system) is computed by
+running that real weather through pvlib's solar-position → plane-of-array
+irradiance → cell-temperature → **PVWatts** chain — the same model NREL and
+utilities use for production estimates. So the network has to learn a real,
+nonlinear physical relationship from raw weather inputs, not just copy a
+formula it was trained on.
 
-**Actual vs Predicted Values**
-![Actual vs Predicted](actual_vs_predicted.png)
+**Honest caveat:** this is a physics-model estimate, not a utility-metered
+reading, so it won't capture things like snow cover, shading, or inverter
+clipping in a real installation. Swap in metered data from your own system
+if you have it, and the same pipeline still works.
 
-## Performance Metrics
-- Mean Absolute Error (MAE)
-- R² Score
+## Files
 
-## How to Run the Project
+- `data_pipeline.py` — loads the real TMY3 data, runs it through PVWatts, engineers features
+- `train.py` — trains the PyTorch model with a proper chronological split, early stopping, exports `results.json`
+- `dashboard.html` — **open this directly in a browser** for the interactive results (loss curve, day-by-day explorer, accuracy scatter)
+
+## Running it yourself
+
 ```bash
-pip install -r requirements.txt
-python solar_power_prediction.py
+pip install torch pvlib scikit-learn pandas numpy
+python data_pipeline.py   # sanity-check the dataset
+python train.py           # trains the model, prints test MAE/RMSE/R², writes results.json
+```
 
-Engineering Application
-This project demonstrates the practical application of Artificial Neural Networks in Renewable Energy systems and Smart Grids. It shows how data-driven models can be used for solar power forecasting.
-Future Work
+Current run: **R² = 0.99, MAE ≈ 52W** on 1,314 held-out hours (54 full days)
+the model never trained on.
 
-Integration with real-world solar datasets
-Implementation of LSTM for time series forecasting
-Development of a web-based prediction dashboard
+## Extending it
+
+- Point `data_pipeline.py` at your own inverter's CSV export instead of the bundled TMY3 file for real metered ground truth
+- Swap in a sunnier NREL station or pull live data from PVGIS/NSRDC
+- Add an LSTM/Transformer for multi-step-ahead forecasting instead of same-hour prediction
