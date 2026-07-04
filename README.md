@@ -1,9 +1,9 @@
 # Solar Power Prediction using Neural Network
 
-This project develops a Feedforward Neural Network using PyTorch to predict solar power generation based on meteorological parameters.
+This project develops a Feedforward Neural Network using PyTorch to predict solar power generation based on meteorological parameters. 
 
 ## Objective
-The goal of this project is to accurately predict solar power output (in kW) using four key weather features:
+To accurately predict solar power output (in kW) using the following weather features:
 - Temperature (°C)
 - Humidity (%)
 - Solar Irradiance (W/m²)
@@ -12,9 +12,7 @@ The goal of this project is to accurately predict solar power output (in kW) usi
 ## Technologies Used
 - Python
 - PyTorch
-- NumPy
-- Pandas
-- Matplotlib
+- NumPy, Pandas, Matplotlib
 - Scikit-learn
 
 ## Model Architecture
@@ -26,11 +24,19 @@ The goal of this project is to accurately predict solar power output (in kW) usi
 - Optimizer: Adam
 - Loss Function: Mean Squared Error (MSE)
 
-## Performance Metrics
-- Mean Absolute Error (MAE): Average prediction error in kW
-- R² Score: Measures how well the model explains the variance in the data
+## Results
 
-## How to Run
+**Training Loss Over Time**
+![Training Loss](training_loss.png)
+
+**Actual vs Predicted Values**
+![Actual vs Predicted](actual_vs_predicted.png)
+
+## Performance Metrics
+- Mean Absolute Error (MAE)
+- R² Score
+
+## How to Run the Project
 ```bash
 pip install torch numpy pandas matplotlib scikit-learn
 python solar_power_prediction.py
