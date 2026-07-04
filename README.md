@@ -1,47 +1,36 @@
-# ⚡ Solar Power Prediction using Neural Network
+# Solar Power Prediction using Neural Network
 
-This project uses a **Feedforward Neural Network** built with **PyTorch** to predict solar power generation based on weather conditions. 
+This project develops a Feedforward Neural Network using PyTorch to predict solar power generation based on meteorological parameters.
 
-## 🎯 Objective
-To predict **Solar Power output (kW)** using four key weather parameters:
+## Objective
+The goal of this project is to accurately predict solar power output (in kW) using four key weather features:
 - Temperature (°C)
 - Humidity (%)
 - Solar Irradiance (W/m²)
 - Wind Speed (km/h)
 
-## 🛠 Technologies Used
-- **Python**
-- **PyTorch** (Deep Learning framework)
-- NumPy, Pandas, Matplotlib
+## Technologies Used
+- Python
+- PyTorch
+- NumPy
+- Pandas
+- Matplotlib
+- Scikit-learn
 
-## 📊 Model Architecture
+## Model Architecture
 - Input Layer: 4 features
-- Hidden Layers: 64 → 32 → 16 neurons
+- Hidden Layers: 128 → 64 → 32 neurons
 - Output Layer: 1 (Predicted Solar Power)
 - Activation Function: ReLU
 - Regularization: Dropout (0.2)
-- Loss Function: Mean Squared Error (MSE)
 - Optimizer: Adam
+- Loss Function: Mean Squared Error (MSE)
 
-## 🚀 How to Run
+## Performance Metrics
+- Mean Absolute Error (MAE): Average prediction error in kW
+- R² Score: Measures how well the model explains the variance in the data
+
+## How to Run
 ```bash
-# 1. Install dependencies
-pip install torch numpy pandas matplotlib
-
-# 2. Run the project
+pip install torch numpy pandas matplotlib scikit-learn
 python solar_power_prediction.py
-📈 Results
-The model learns to predict solar power generation based on weather data. Training loss decreases over epochs showing successful learning.
-📌 Key Learnings
-
-Building and training a neural network from scratch
-Data preprocessing and feature scaling
-Understanding Forward Pass, Backpropagation, and Gradient Descent
-Practical application of Neural Networks in Renewable Energy
-
-🔮 Future Improvements
-
-Use real-world solar dataset (NREL or Kaggle)
-Implement LSTM / GRU for time series forecasting
-Build a web app using Streamlit or Flask
-Deploy the model
